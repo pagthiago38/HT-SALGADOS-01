@@ -717,10 +717,6 @@ async def write_settings(body: SettingsIn):
 # Aggregated views
 @api.get("/dashboard")
 async def dashboard():
-    try:
-        await auto_snapshot()
-    except Exception as exc:
-        logger.error("auto_snapshot failed: %s", exc)
     s = await get_settings()
     today = today_local()
     ms, me = month_bounds()
