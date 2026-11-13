@@ -1,0 +1,91 @@
+{
+  "project_name": "HT SALGADOS — SISTEMA COMPLETO DE GESTÃO",
+  "app_type": "dashboard / saas_app",
+  "language": "pt-BR",
+  "currency": "BRL (R$)",
+  "theme_strategy": {
+    "archetype": "Warm Artisan Food-Tech & Tactical Financial Dashboard",
+    "primary_tone": "Warm Amber & Deep Ember Slate",
+    "background_light": "bg-slate-50 text-slate-900",
+    "background_dark": "bg-[#0B0F17] text-slate-100",
+    "color_palette": {
+      "primary": "amber-500 (#F59E0B) / orange-600 (#EA580C)",
+      "primary_hover": "amber-600 (#D97706) / orange-700 (#C2410C)",
+      "slate_dark": "#0B0F17",
+      "card_dark": "#131B2A",
+      "card_border_dark": "rgba(255, 255, 255, 0.08)",
+      "positive_green": "emerald-500 (#10B981) / green-600 (#16A34A)",
+      "negative_red": "rose-500 (#F43F5E) / red-600 (#DC2626)",
+      "neutral_muted": "slate-500 (#64748B)",
+      "accent_gold": "yellow-500 (#EAB308)"
+    }
+  },
+  "typography": {
+    "heading_font": "Plus Jakarta Sans / Outfit / System Sans",
+    "body_font": "Inter / System Sans",
+    "mono_font": "JetBrains Mono / monospace (for currency values & receipt numbers)",
+    "font_scale": {
+      "h1_page_title": "text-2xl sm:text-3xl font-bold tracking-tight",
+      "h2_section_title": "text-xl sm:text-2xl font-semibold tracking-tight",
+      "kpi_value": "text-2xl sm:text-3xl lg:text-4xl font-extrabold font-mono tracking-tight",
+      "kpi_label": "text-xs uppercase tracking-wider text-muted-foreground font-medium",
+      "body": "text-sm sm:text-base leading-relaxed"
+    }
+  },
+  "navigation_structure": {
+    "sidebar_desktop": "Fixed left sidebar with logo 'HT SALGADOS', status pill 'Caixa Aberto', 10 main menu items with Lucide icons, dark theme styling with amber active indicator.",
+    "bottom_mobile_nav": "Fixed bottom bar on mobile with quick shortcuts (Vendas, Dashboard, Estoque, ADM, Menu Geral) + Sheet drawer for all 10 modules.",
+    "menu_items": [
+      { "id": "dashboard", "label": "Dashboard", "icon": "LayoutDashboard" },
+      { "id": "vendas", "label": "Vendas", "icon": "ShoppingCart" },
+      { "id": "produtos", "label": "Produtos", "icon": "Package" },
+      { "id": "combos", "label": "Combos", "icon": "Boxes" },
+      { "id": "estoque", "label": "Estoque", "icon": "Layers" },
+      { "id": "despesas", "label": "Despesas", "icon": "Receipt" },
+      { "id": "financeiro", "label": "Financeiro", "icon": "Wallet" },
+      { "id": "adm", "label": "ADM (Gestão)", "icon": "Calculator" },
+      { "id": "relatorios", "label": "Relatórios", "icon": "BarChart3" },
+      { "id": "backup", "label": "Backup & Config", "icon": "Database" }
+    ]
+  },
+  "key_features_and_modules": {
+    "dashboard": "KPI Summary Cards (Faturamento Hoje, Vendas do Mês, Ticket Médio, Lucro Líquido Projetado), Recharts area chart for Revenue vs Expenses, Top selling snacks bar chart, low stock alerts list, recent sale list.",
+    "vendas": "POS Speed Sale interface. Grid of quick product cards with images/tags (Salgados fritos, assados, doces, bebidas), filter by category, instant search, search bar, side cart with quantity controls, discounts, customer phone/name option, payment method selection (PIX, Dinheiro, Cartão Crédito/Débito), change calculator, quick print receipt modal.",
+    "produtos": "CRUD table with search, category filters, cost vs selling price display, margin %, stock level indicator, modal dialog for create/edit product with image choice.",
+    "combos": "Kit generator (e.g., 'Cento de Salgados + 2L Guaraná'), total individual cost vs combo promo price display, items included builder.",
+    "estoque": "Stock control (salgados prontos, congelados, insumos/massa/recheio), minimum stock alert thresholds, add/remove manual adjustments with reason notes, transaction history.",
+    "despesas": "Expense ledger categorized into (Insumos/Matéria Prima, Aluguel, Energia/Água, Gás, Salários/Diárias, Embalagens, Outros), status (Pago/Pendente), due date.",
+    "financeiro": "Daily & monthly cash flow ledger, payables/receivables timeline, PIX vs Cash breakdown, quick cash closing drawer balance validator.",
+    "adm": "Waterfall distribution engine for business management: Gross Revenue -> CMV -> Operating Expenses -> Operational Result -> Percent distribution setup (Pró-Labore %, Dízimo %, Reserva de Emergência %, Investimento/Reinvestimento %, Lucro Líquido %). Interactive slider/number input to adjust percentages live and recalculate allocations automatically.",
+    "relatorios": "Daily, weekly, and monthly reports with charts, PDF receipt generator simulator, CSV export button for Excel integration.",
+    "backup": "1-click JSON download export, JSON restore import file input, reset demo data option, company info editor (CNPJ, Nome Fantasia, Telefone, Chave PIX)."
+  },
+  "layout_and_spacing_strategy": {
+    "grid": "High density grid system with tight/generous padding (p-4 md:p-6 lg:p-8)",
+    "kpi_cards": "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6",
+    "pos_vendas_layout": "grid grid-cols-1 lg:grid-cols-12 gap-6 (Product Catalog: col-span-12 lg:col-span-7 xl:col-span-8, Cart: col-span-12 lg:col-span-5 xl:col-span-4 sticky top-6)",
+    "container": "max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 w-full min-h-screen pb-24 md:pb-8"
+  },
+  "image_urls": {
+    "salgados_mix": "https://images.unsplash.com/photo-1682263167429-0dbcf2c1e127?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODF8MHwxfHNlYXJjaHwyfHxmcmllZCUyMHNhdm9yeSUyMHBhc3RyeSUyMHNuYWNrfGVufDB8fHx8MTc5NDAwODc0MHww&ixlib=rb-4.1.0&q=85",
+    "empada_salgado": "https://images.unsplash.com/photo-1679310249395-ae267ae0d273?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHw0fHxlbXBhbmFkYXMlMjBwYXN0cnklMjBmb29kfGVufDB8fHx8MTc5NDAwODc0NXww&ixlib=rb-4.1.0&q=85",
+    "lanchonete_balcao": "https://images.unsplash.com/photo-1793665906192-4a81f8979e01?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NzV8MHwxfHNlYXJjaHwxfHxlbXBhbmFkYXMlMjBwYXN0cnklMjBmb29kfGVufDB8fHx8MTc5NDAwODc0NXww&ixlib=rb-4.1.0&q=85",
+    "mini_salgados": "https://images.unsplash.com/photo-1599975744981-48d63c8f38af?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxODF8MHwxfHNlYXJjaHwzfHxmcmllZCUyMHNhdm9yeSUyMHBhc3RyeSUyMHNuYWNrfGVufDB8fHx8MTc5NDAwODc0MHww&ixlib=rb-4.1.0&q=85"
+  },
+  "instructions_to_main_agent": [
+    "Use Brazilian Portuguese for all UI elements, labels, notifications, and dummy data.",
+    "All monetary values MUST be formatted with BRL (e.g. 'R$ 1.250,00' using Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })).",
+    "Ensure indicators for financial gain / revenue / profit are highlighted in GREEN (text-emerald-500 or text-green-600) and expenses / losses / costs in RED (text-rose-500 or text-red-600).",
+    "In Vendas (POS), optimize for fast touch/click operation with clear (+ / - / delete) item buttons and large 'CONCLUIR VENDA (PIX / DINHEIRO / CARTÃO)' CTA.",
+    "Implement realistic sample data for HT Salgados (Coxinha de Frango, Empada de Palmito, Kibe com Queijo, Pastel de Carne, Cento de Salgados de Festa, Refrigerante Guaraná, Suco de Laranja, Churros de Doce de Leite).",
+    "Ensure ADM waterfall recalculates live when sliders or input percentages change for Pró-Labore, Dízimo, Reserva, Investimento, and Lucro Liquido.",
+    "Every clickable button, tab, and input must include data-testid attribute in kebab-case (e.g., data-testid='nav-vendas-button', data-testid='pos-checkout-button', data-testid='kpi-faturamento-card').",
+    "Support Dark Mode / Light Mode toggle smoothly with persistent preference in localStorage."
+  ],
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "Never use generic centered layouts or plain unstyled HTML elements.",
+    "Always provide immediate UI response and Toast notification (using sonner) on actions (creating product, completing sale, adding expense, exporting JSON).",
+    "Ensure touch target size is minimum 44px for fast mobile or tablet screen touch sales at counter.",
+    "Ensure zero transparent backgrounds on dropdowns or floating dialog overlays; use glassmorphism backdrop-blur-md with solid bg opacity."
+  ]
+}
