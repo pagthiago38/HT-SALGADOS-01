@@ -10,32 +10,21 @@ from typing import List, Literal, Optional
 from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, APIRouter, HTTPException, Query, Body
-from motor.motor_asyncio import AsyncIOMotorClient
+from fastapi import FastAPI, APIRouter, HTTPException, Query, Body, Request
 from pydantic import BaseModel, Field
-from pymongo import ASCENDING, DESCENDING, IndexModel
 from starlette.middleware.cors import CORSMiddleware
+import httpx
+from supabase_store import db, set_request_identity, reset_request_identity
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-client = AsyncIOMotorClient(os.environ['MONGO_URL'])
-db = client[os.environ['DB_NAME']]
 TZ = ZoneInfo("America/Sao_Paulo")
 logger = logging.getLogger(__name__)
 
 DATA_COLLECTIONS = ["products", "combos", "sales", "stock_movements", "expenses", "movements", "settings", "audit_log", "counters"]
 
-INDEXES: dict[str, list[IndexModel]] = {
-    "products": [IndexModel([("id", ASCENDING)], name="id", unique=True)],
-    "combos": [IndexModel([("id", ASCENDING)], name="id", unique=True)],
-    "sales": [IndexModel([("id", ASCENDING)], name="id", unique=True), IndexModel([("date", ASCENDING)], name="date"), IndexModel([("created_at", DESCENDING)], name="created_desc")],
-    "stock_movements": [IndexModel([("id", ASCENDING)], name="id", unique=True), IndexModel([("date", ASCENDING)], name="date"), IndexModel([("product_id", ASCENDING)], name="product")],
-    "expenses": [IndexModel([("id", ASCENDING)], name="id", unique=True), IndexModel([("date", ASCENDING)], name="date")],
-    "movements": [IndexModel([("id", ASCENDING)], name="id", unique=True), IndexModel([("date", ASCENDING)], name="date")],
-    "audit_log": [IndexModel([("at", DESCENDING)], name="at_desc")],
-    "snapshots": [IndexModel([("created_at", DESCENDING)], name="created_desc")],
-}
+# Índices e isolamento são administrados pelo PostgreSQL/Supabase (app_records + RLS).
 
 EXPENSE_CATEGORIES = ["Despesas fixas", "Custos extras", "Mercadorias", "Embalagens", "Manutenção", "Outros"]
 PRODUCT_CATEGORIES = ["Salgados", "Bebidas", "Sucos", "Refrigerantes", "Industrializados", "Outros"]
@@ -76,13 +65,7 @@ def r2(v: float) -> float:
 
 
 async def ensure_indexes() -> None:
-    for collection, models in INDEXES.items():
-        for model in models:
-            try:
-                await db[collection].create_indexes([model])
-            except Exception as exc:
-                logger.error("ensure_indexes(%s.%s): %s", collection, model.document["name"], exc)
-
+    return None
 
 async def get_settings() -> dict:
     s = await db.settings.find_one({"id": "main"}, {"_id": 0})
@@ -345,6 +328,34 @@ def public(p: dict) -> dict:
 # ---------- App ----------
 app = FastAPI()
 api = APIRouter(prefix="/api")
+
+
+@app.middleware("http")
+async def require_supabase_session(request: Request, call_next):
+    path = request.url.path
+    if not path.startswith("/api/") or path in ("/api/", "/api/meta"):
+        return await call_next(request)
+    auth = request.headers.get("authorization", "")
+    token = auth[7:].strip() if auth.lower().startswith("bearer ") else ""
+    if not token:
+        return __import__("starlette.responses", fromlist=["JSONResponse"]).JSONResponse({"detail": "Sessão necessária"}, status_code=401)
+    url = os.environ.get("SUPABASE_URL", "").rstrip("/") + "/auth/v1/user"
+    key = os.environ.get("SUPABASE_ANON_KEY", "")
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get(url, headers={"apikey": key, "Authorization": f"Bearer {token}"})
+        if response.status_code != 200:
+            return __import__("starlette.responses", fromlist=["JSONResponse"]).JSONResponse({"detail": "Sessão inválida ou expirada"}, status_code=401)
+        user_id = response.json().get("id")
+        if not user_id:
+            raise ValueError("ID do usuário ausente")
+    except Exception:
+        return __import__("starlette.responses", fromlist=["JSONResponse"]).JSONResponse({"detail": "Não foi possível validar a sessão no Supabase"}, status_code=401)
+    identity = set_request_identity(user_id, token)
+    try:
+        return await call_next(request)
+    finally:
+        reset_request_identity(identity)
 
 
 @api.get("/")
@@ -903,10 +914,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 @app.on_event("startup")
 async def startup():
     app.state.index_task = asyncio.create_task(ensure_indexes())
-    try:
-        await seed()
-    except Exception as exc:
-        logger.error("seed failed: %s", exc)
 
 
 @app.on_event("shutdown")
@@ -914,4 +921,3 @@ async def shutdown_db_client():
     app.state.index_task.cancel()
     with suppress(asyncio.CancelledError):
         await app.state.index_task
-    client.close()
