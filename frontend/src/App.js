@@ -12,27 +12,14 @@ import Financeiro from "./pages/Financeiro";
 import Adm from "./pages/Adm";
 import Relatorios from "./pages/Relatorios";
 import Backup from "./pages/Backup";
-
-function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/vendas" element={<Vendas />} />
-          <Route path="/produtos" element={<Produtos />} />
-          <Route path="/combos" element={<Combos />} />
-          <Route path="/estoque" element={<Estoque />} />
-          <Route path="/despesas" element={<Despesas />} />
-          <Route path="/financeiro" element={<Financeiro />} />
-          <Route path="/adm" element={<Adm />} />
-          <Route path="/relatorios" element={<Relatorios />} />
-          <Route path="/backup" element={<Backup />} />
-        </Route>
-      </Routes>
-      <Toaster position="top-center" richColors />
-    </BrowserRouter>
-  );
+import Login from "./auth/Login";
+import PasswordReset from "./auth/PasswordReset";
+import { useAuth } from "./auth/AuthContext";
+function ProtectedApp() {
+  const { user, loading, recovery } = useAuth();
+  if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#0F141C] text-white">Carregando sessão...</div>;
+  if (recovery && user) return <PasswordReset />;
+  if (!user) return <Login />;
+  return <BrowserRouter><Routes><Route element={<Layout />}><Route path="/" element={<Dashboard />} /><Route path="/vendas" element={<Vendas />} /><Route path="/produtos" element={<Produtos />} /><Route path="/combos" element={<Combos />} /><Route path="/estoque" element={<Estoque />} /><Route path="/despesas" element={<Despesas />} /><Route path="/financeiro" element={<Financeiro />} /><Route path="/adm" element={<Adm />} /><Route path="/relatorios" element={<Relatorios />} /><Route path="/backup" element={<Backup />} /></Route></Routes><Toaster position="top-center" richColors /></BrowserRouter>;
 }
-
-export default App;
+export default function App() { return <ProtectedApp />; }

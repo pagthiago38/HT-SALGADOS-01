@@ -2,6 +2,7 @@ import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { LayoutDashboard, ShoppingCart, Package, Boxes, Layers, Receipt, Wallet, Calculator, BarChart3, Database, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
+import { useAuth } from "../auth/AuthContext";
 
 export const NAV = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, id: "dashboard" },
@@ -43,6 +44,7 @@ const MOBILE = ["/", "/vendas", "/estoque", "/adm"];
 export default function Layout() {
   const [open, setOpen] = useState(false);
   const loc = useLocation();
+  const { user, signOut } = useAuth();
   return (
     <div className="min-h-screen bg-[#F6F3EE]">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-[#0F141C] px-4 py-6 lg:flex">
@@ -70,6 +72,7 @@ export default function Layout() {
 
       <main className="lg:pl-64">
         <div key={loc.pathname} className="mx-auto w-full max-w-[1500px] p-4 pb-28 sm:p-6 lg:p-10 lg:pb-12">
+          <div className="mb-5 flex flex-wrap items-center justify-end gap-3 text-xs text-slate-500"><span>{user?.email}</span><button onClick={signOut} className="rounded-lg border border-slate-300 bg-white px-3 py-2 font-semibold text-slate-700 hover:border-orange-400">Sair</button></div>
           <Outlet />
         </div>
       </main>
