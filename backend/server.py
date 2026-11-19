@@ -872,7 +872,28 @@ async def restore_snapshot(snap_id: str):
     await audit("backup", snap_id, "restore_snapshot", None, None)
     return {"ok": True}
 
+@api.delete("/backup/snapshots/{snap_id}")
+async def delete_snapshot(snap_id: str):
+    snap = await db.snapshots.find_one({"id": snap_id}, {"_id": 0})
 
+    if not snap:
+        raise HTTPException(404, "Backup não encontrado")
+
+    if snap.get("reason") == "Automático diário":
+        automaticos = await db.snapshots.find(
+            {"reason": "Automático diário"},
+            {"_id": 0, "id": 1, "created_at": 1}
+        ).sort("created_at", -1).to_list(None)
+
+        if automaticos and automaticos[0]["id"] == snap_id:
+            raise HTTPException(
+                400,
+                "Não é permitido excluir o backup automático mais recente"
+            )
+
+    await db.snapshots.delete_many({"id": snap_id})
+
+    return {"ok": True, "message": "Backup excluído com sucesso"}
 @api.post("/backup/reset")
 async def reset_all(payload: dict = Body(...)):
     if payload.get("confirm") != "APAGAR":
