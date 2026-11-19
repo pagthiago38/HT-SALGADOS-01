@@ -851,6 +851,36 @@ async def restore_backup(payload: dict = Body(...)):
     return {"ok": True}
 
 
+@api.get("/storage")
+async def storage_stats(request: Request):
+    auth = request.headers.get("authorization", "")
+    token = auth[7:].strip() if auth.lower().startswith("bearer ") else ""
+
+    if not token:
+        raise HTTPException(401, "Sessão necessária")
+
+    url = os.environ.get("SUPABASE_URL", "").rstrip("/") + "/rest/v1/rpc/ht_salgados_storage_stats"
+    key = os.environ.get("SUPABASE_ANON_KEY", "")
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        response = await client.post(
+            url,
+            headers={
+                "apikey": key,
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json"
+            },
+            json={}
+        )
+
+    if response.status_code >= 400:
+        raise HTTPException(
+            response.status_code,
+            f"Erro ao consultar armazenamento: {response.text[:300]}"
+        )
+
+    return response.json()
+
 @api.get("/backup/snapshots")
 async def list_snapshots():
     return await db.snapshots.find({}, {"_id": 0, "data": 0}).sort("created_at", -1).to_list(None)
