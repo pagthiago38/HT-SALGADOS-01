@@ -39,6 +39,8 @@ function SettingsForm() {
 
 export default function Backup() {
   const [snaps, setSnaps] = useState([]);
+  const [storage, setStorage] = useState(null);
+const [loadingStorage, setLoadingStorage] = useState(false);
   const [audit, setAudit] = useState([]);
   const [confirm, setConfirm] = useState("");
   const fileRef = useRef(null);
@@ -47,10 +49,25 @@ export default function Backup() {
     setSnaps(s.data);
     setAudit(a.data);
   }, []);
+  
+const loadStorage = useCallback(async () => {
+  setLoadingStorage(true);
+  try {
+    const response = await api.get("/storage");
+    setStorage(response.data);
+  } catch (error) {
+    toast.error("Não foi possível consultar o armazenamento");
+  } finally {
+    setLoadingStorage(false);
+  }
+}, []);
+
   useEffect(() => {
     load().catch((e) => toast.error(errMsg(e)));
   }, [load]);
-
+useEffect(() => {
+  loadStorage();
+}, [loadStorage]);
   const exportJSON = async () => {
     const { data } = await api.get("/backup");
     downloadFile(`ht-salgados-backup-${data.exported_at.slice(0, 10)}.json`, JSON.stringify(data, null, 2), "application/json");
@@ -79,16 +96,85 @@ export default function Backup() {
     toast.success("Ponto de restauração criado");
     load();
   };
+  
+const deleteSnap = async (id) => {
+  if (!window.confirm("Tem certeza que deseja excluir este backup? Essa ação não pode ser desfeita.")) return;
+
+  try {
+    await api.delete(`/backup/snapshots/${id}`);
+    toast.success("Backup excluído com sucesso");
+    await load();
+  } catch (e) {
+    toast.error(errMsg(e));
+  }
+};
+
+const formatBytes = (bytes) => {
+  const value = Number(bytes || 0);
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 * 1024) return `${(value / 1024).toFixed(2)} KB`;
+  if (value < 1024 * 1024 * 1024) return `${(value / (1024 * 1024)).toFixed(2)} MB`;
+  return `${(value / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+};
+
   const reset = async () => {
     await api.post("/backup/reset", { confirm }).then(() => toast.success("Dados apagados (ponto de restauração criado)")).catch((e) => toast.error(errMsg(e)));
     setConfirm("");
     load();
   };
 
+const latestAutomaticId = [...snaps]
+  .filter((s) => s.reason === "Automático diário")
+  .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0]?.id;
+
   return (
     <div>
       <PageHeader title="Backup e configurações" subtitle="Tudo é salvo automaticamente no banco central, acessível do computador e do celular." />
       <div className="grid gap-6 xl:grid-cols-2">
+        
+<Panel title="Armazenamento do banco" testid="storage-panel">
+  {loadingStorage ? (
+    <p className="text-sm text-slate-500">Consultando armazenamento...</p>
+  ) : storage ? (
+    <>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="rounded-lg bg-slate-50 p-3">
+          <p className="text-xs text-slate-500">Banco de dados</p>
+          <p className="text-xl font-bold">{formatBytes(storage.database_bytes)}</p>
+        </div>
+        <div className="rounded-lg bg-slate-50 p-3">
+          <p className="text-xs text-slate-500">Tabela de registros</p>
+          <p className="text-xl font-bold">{formatBytes(storage.table_bytes)}</p>
+        </div>
+        <div className="rounded-lg bg-slate-50 p-3">
+          <p className="text-xs text-slate-500">Seus dados (estimativa)</p>
+          <p className="text-xl font-bold">{formatBytes(storage.user_data_bytes)}</p>
+        </div>
+        <div className="rounded-lg bg-slate-50 p-3">
+          <p className="text-xs text-slate-500">Quantidade de registros</p>
+          <p className="text-xl font-bold">{storage.user_records ?? 0}</p>
+        </div>
+      </div>
+      <div className="mt-4">
+        <p className="mb-2 text-sm font-semibold">Detalhamento por coleção</p>
+        {Object.entries(storage.collections || {}).map(([name, info]) => (
+          <div key={name} className="flex justify-between border-b border-dashed py-2 text-sm">
+            <span>{name}</span>
+            <span className="text-slate-500">
+              {info.count} registros · {formatBytes(info.bytes)}
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-xs text-slate-500">
+        O tamanho do banco e da tabela é físico. O tamanho dos seus dados é uma estimativa.
+      </p>
+    </>
+  ) : (
+    <p className="text-sm text-slate-500">Não foi possível carregar os dados de armazenamento.</p>
+  )}
+</Panel>
+
         <Panel title="Backup completo" testid="backup-panel">
           <p className="mb-4 text-sm text-slate-500">Baixe um arquivo JSON com todos os dados ou restaure um arquivo salvo anteriormente.</p>
           <div className="flex flex-wrap gap-2">
@@ -105,7 +191,7 @@ export default function Backup() {
           {snaps.length === 0 ? <Empty text="Nenhum ponto ainda" /> : snaps.map((s) => (
             <div key={s.id} className="flex items-center justify-between border-b border-dashed border-slate-100 py-2 text-sm">
               <div><p className="font-semibold">{s.reason}</p><p className="text-xs text-slate-500">{fmtDateTime(s.created_at)} · {s.counts?.sales || 0} vendas · {s.counts?.products || 0} produtos</p></div>
-              <Button size="sm" variant="ghost" onClick={() => restoreSnap(s.id)} data-testid={`snapshot-restore-${s.id}`}><History className="mr-1 h-3.5 w-3.5" />Restaurar</Button>
+               <div className="flex gap-1">   <Button size="sm" variant="ghost" onClick={() => restoreSnap(s.id)} data-testid={`snapshot-restore-${s.id}`}>     <History className="mr-1 h-3.5 w-3.5" />Restaurar   </Button>   {s.id !== latestAutomaticId && (     <Button size="sm" variant="ghost" onClick={() => deleteSnap(s.id)} data-testid={`snapshot-delete-${s.id}`}>       <Trash2 className="mr-1 h-3.5 w-3.5" />Excluir     </Button>   )} </div>
             </div>
           ))}
         </Panel>
